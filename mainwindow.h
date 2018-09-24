@@ -48,12 +48,10 @@ private slots:
 
     void on_listWidgetNotes_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
-    void on_listWidgetNotes_clicked(const QModelIndex &index);
-
 private:
     Ui::MainWindow *ui;
     QFilesContainer notes;
-    bool isModified, change;
+    bool isModified, change, pushButtonRenameEnabledFirstTiem;
     QShortcut *save;
     QShortcut *remove;
     settingsWindow s;

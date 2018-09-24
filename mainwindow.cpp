@@ -8,7 +8,7 @@
 #include <QTimer>
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow), iNotesFontSize(12), iNoteFontSize(12)
+    ui(new Ui::MainWindow), iNotesFontSize(12), iNoteFontSize(12), pushButtonRenameEnabledFirstTiem(false)
 {
     ui->setupUi(this);
     isModified = change = false;
@@ -36,7 +36,7 @@ void MainWindow::on_pushButtonSave_clicked()
 {
     if(notes.checkOpenFile())
     {
-        QMessageBox::information(this, "info", "File is not open!");
+        QMessageBox::information(this, "VfNotes", "File is not open!");
         return;
     }
     notes.saveCurrentFile(ui->plainTextEditContent->toPlainText().toUtf8());
@@ -47,13 +47,13 @@ void MainWindow::on_pushButtonNew_clicked()
 {
     if(ui->lineEditNew->text().isEmpty())
     {
-        QMessageBox::information(this, "info", "Name is empty!");
+        QMessageBox::information(this, "VfNotes", "Name is empty!");
         return;
     }
     change = false;
     if(isModified)
     {
-        auto reply = QMessageBox::question(this, "Test", "Do you want save changes?", QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
+        auto reply = QMessageBox::question(this, "VfNotes", "Do you want save changes?", QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
         if (reply == QMessageBox::Yes)
         {
             on_pushButtonSave_clicked();
@@ -77,10 +77,10 @@ void MainWindow::on_pushButtonRemove_clicked()
 {
     if(notes.checkOpenFile())
     {
-        QMessageBox::information(this, "info", "File is not open!");
+        QMessageBox::information(this, "VfNotes", "File is not open!");
         return;
     }
-    auto reply = QMessageBox::question(this, "Test", "Do you want remove this note?", QMessageBox::Yes|QMessageBox::No);
+    auto reply = QMessageBox::question(this, "VfNotes", "Do you want remove this note?", QMessageBox::Yes|QMessageBox::No);
     if(reply == QMessageBox::Yes)
     {
         ui->listWidgetNotes->clear();
@@ -88,6 +88,9 @@ void MainWindow::on_pushButtonRemove_clicked()
         this->setWindowTitle("VfNotes 1.0");
         ui->plainTextEditContent->clear();
         ui->plainTextEditContent->setEnabled(false);
+        ui->pushButtonRemove->setEnabled(false);
+        ui->pushButtonRename->setEnabled(false);
+        ui->pushButtonSave->setEnabled(false);
         isModified = change = false;
     }
 }
@@ -105,7 +108,7 @@ void MainWindow::on_pushButtonRename_clicked()
 {
     if(ui->lineEditNew->text().isEmpty())
     {
-        QMessageBox::information(this, "info", "Name is empty!");
+        QMessageBox::information(this, "VfNotes", "Name is empty!");
         return;
     }
     notes.renameFile(ui->lineEditNew->text());
@@ -162,7 +165,7 @@ void MainWindow::setNoteFontSize(int fSize)
 
 void MainWindow::showAboutWindow()
 {
-    QMessageBox::information(this, "About", "VfNotes release 1.0. Written by Arkadiusz97.");
+    QMessageBox::information(this, "About VfNotes.", "VfNotes release 1.0. Written by Arkadiusz97.");
 }
 
 void MainWindow::loadConfig()//temporarily
@@ -192,15 +195,18 @@ void MainWindow::saveConfig()
     settingsFile.close();
 }
 
-void MainWindow::on_listWidgetNotes_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)//Test!
+void MainWindow::on_listWidgetNotes_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
-    if(current != NULL)
+    if(current != NULL && pushButtonRenameEnabledFirstTiem)
     {
         ui->plainTextEditContent->setEnabled(true);
+        ui->pushButtonRemove->setEnabled(true);
+        ui->pushButtonRename->setEnabled(true);
+        ui->pushButtonSave->setEnabled(true);
         change = false;
         if(isModified)
         {
-            auto reply = QMessageBox::question(this, "Test", "Do you want save changes?", QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
+            auto reply = QMessageBox::question(this, "VfNotes", "Do you want save changes?", QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
             if (reply == QMessageBox::Yes) on_pushButtonSave_clicked();
             else if(reply == QMessageBox::No) notes.closeFile();
             else
@@ -217,13 +223,14 @@ void MainWindow::on_listWidgetNotes_currentItemChanged(QListWidgetItem *current,
         isModified = false;
         this->setWindowTitle(current->text()+" - VfNotes 1.0");
         ui->plainTextEditContent->setPlainText(notes.openFile(current->text()));
+        ui->plainTextEditContent->setFocus();
+        QTextCursor cursor(ui->plainTextEditContent->textCursor());
+        cursor.movePosition(QTextCursor::End);
+        ui->plainTextEditContent->setTextCursor(cursor);
     }
-}
-
-void MainWindow::on_listWidgetNotes_clicked(const QModelIndex &index)
-{
-    ui->plainTextEditContent->setFocus();
-    QTextCursor cursor(ui->plainTextEditContent->textCursor());
-    cursor.movePosition(QTextCursor::End);
-    ui->plainTextEditContent->setTextCursor(cursor);
+    if(!pushButtonRenameEnabledFirstTiem)
+    {
+        pushButtonRenameEnabledFirstTiem = true;
+        ui->listWidgetNotes->setCurrentIndex(QModelIndex());
+    }
 }

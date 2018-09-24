@@ -17,6 +17,9 @@
    <layout class="QGridLayout" name="gridLayout">
     <item row="2" column="5">
      <widget class="QPushButton" name="pushButtonRename">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="font">
        <font>
         <pointsize>16</pointsize>
@@ -32,6 +35,9 @@
     </item>
     <item row="2" column="3">
      <widget class="QPushButton" name="pushButtonSave">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="font">
        <font>
         <pointsize>16</pointsize>
@@ -44,6 +50,9 @@
     </item>
     <item row="2" column="4">
      <widget class="QPushButton" name="pushButtonRemove">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="font">
        <font>
         <pointsize>16</pointsize>

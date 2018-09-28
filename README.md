@@ -11,3 +11,6 @@ Program was tested under MinGW compiler on Windows and under GCC 64-bit on Linux
 # Screenshots
 ![Window](https://raw.githubusercontent.com/arkadiusz97/VfNotes/master/screenshots/Window.png)
 ![Settings](https://raw.githubusercontent.com/arkadiusz97/VfNotes/master/screenshots/Settings.png)
+
+# Download
+Download the newest version for Microsoft Windows 7, 8 and 10: https://github.com/arkadiusz97/VfNotes/releases/download/1.0/VfNotes.zip

@@ -15,3 +15,6 @@ This program uses OpenSans font. This is Google Inc. product with Apache License
 ![1](https://github.com/arkadiusz97/VfNotes/blob/master/screenshots/1.png)
 ![2](https://github.com/arkadiusz97/VfNotes/blob/master/screenshots/2.png)
 ![3](https://github.com/arkadiusz97/VfNotes/blob/master/screenshots/3.png)
+
+# Download
+Download the latest version for Microsoft Windows 7, 8 and 10: https://github.com/arkadiusz97/VfNotes/releases/download/1.1/VfNotes_1.1.zip

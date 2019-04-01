@@ -1,28 +1,43 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "settingswindow.h"
-#include <QDir>
-#include <QRegularExpression>
-#include <QFile>
-#include <QTextStream>
-#include <QTimer>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow), iNotesFontSize(12), iNoteFontSize(12), pushButtonRenameEnabledFirstTiem(false)
+    ui(new Ui::MainWindow), pushButtonRenameEnabledFirstTime(false),
+    isModified(false),
+    change(false),
+    startThemeFileName("start_theme.css"),
+    versionString("1.1")
 {
     ui->setupUi(this);
-    isModified = change = false;
     ui->listWidgetNotes->addItems(notes.openDirectory(QDir::currentPath()+"/notes/"));
+    setWindowTitle("VfNotes " + versionString);
     save = new QShortcut(QKeySequence(QKeySequence::Save), this);
     connect(save, SIGNAL(activated()), this, SLOT(on_pushButtonSave_clicked()));
     remove = new QShortcut(QKeySequence(QKeySequence::Delete), this);
     connect(remove, SIGNAL(activated()), this, SLOT(on_pushButtonRemove_clicked()));
     connect(ui->actionsettings, SIGNAL(triggered(bool)), this, SLOT(showSettingsWindow()));
     connect(ui->actionAbout, SIGNAL(triggered(bool)), this, SLOT(showAboutWindow()));
+    connect(ui->actionSetTheme, SIGNAL(triggered(bool)), this, SLOT(setTheme()));
+    connect(ui->actionSetDefaultTheme, SIGNAL(triggered(bool)), this, SLOT(setDefaultTheme()));
     connect(&s, &settingsWindow::notesFontSize, this, &MainWindow::setNotesFontSize);
     connect(&s, &settingsWindow::noteFontSize, this, &MainWindow::setNoteFontSize);
     connect(&s, &settingsWindow::noteFontSize, this, &MainWindow::saveConfig);
+    int fontId = QFontDatabase::addApplicationFont(":/OpenSans-Light.ttf");
+    if(fontId != -1)
+    {
+        QString family = QFontDatabase::applicationFontFamilies(fontId).at(0);
+        QFont font(family, -1, QFont::Light, true);
+        noteFont = font;
+        notesFont = font;
+        QApplication::setFont(font);
+    }
     loadConfig();
+    QFile startThemeFile(startThemeFileName);
+    startThemeFile.open(QIODevice::ReadOnly);
+    qApp->setStyleSheet(startThemeFile.readAll());
+    startThemeFile.close();
 }
 
 MainWindow::~MainWindow()
@@ -41,6 +56,8 @@ void MainWindow::on_pushButtonSave_clicked()
     }
     notes.saveCurrentFile(ui->plainTextEditContent->toPlainText().toUtf8());
     isModified = false;
+    ui->pushButtonSave->setEnabled(false);
+    ui->plainTextEditContent->setFocus();
 }
 
 void MainWindow::on_pushButtonNew_clicked()
@@ -68,13 +85,16 @@ void MainWindow::on_pushButtonNew_clicked()
     ui->listWidgetNotes->clear();
     ui->listWidgetNotes->addItems(notes.newFile(newFileName));
     ui->lineEditNew->clear();
-    auto matchItems = ui->listWidgetNotes->findItems(newFileName, Qt::MatchExactly);
+    auto matchItems = ui->listWidgetNotes->findItems(newFileName, Qt::MatchExactly | Qt::MatchFixedString);
     ui->listWidgetNotes->setCurrentItem(matchItems[0]);
+    if(ui->listWidgetNotes->count() == 1)
+        ui->listWidgetNotes->setCurrentRow(0);
     ui->plainTextEditContent->setFocus();
 }
 
 void MainWindow::on_pushButtonRemove_clicked()
 {
+    ui->listWidgetNotes->setEnabled(false);
     if(notes.checkOpenFile())
     {
         QMessageBox::information(this, "VfNotes", "File is not open!");
@@ -85,7 +105,7 @@ void MainWindow::on_pushButtonRemove_clicked()
     {
         ui->listWidgetNotes->clear();
         ui->listWidgetNotes->addItems(notes.removeFile());
-        this->setWindowTitle("VfNotes 1.0");
+        this->setWindowTitle("VfNotes " + versionString);
         ui->plainTextEditContent->clear();
         ui->plainTextEditContent->setEnabled(false);
         ui->pushButtonRemove->setEnabled(false);
@@ -93,10 +113,12 @@ void MainWindow::on_pushButtonRemove_clicked()
         ui->pushButtonSave->setEnabled(false);
         isModified = change = false;
     }
+    ui->listWidgetNotes->setEnabled(true);
 }
 
 void MainWindow::on_plainTextEditContent_textChanged()
 {
+    ui->pushButtonSave->setEnabled(true);
     if(!notes.checkOpenFile())
     {
         if(!change) change = true;
@@ -109,17 +131,26 @@ void MainWindow::on_pushButtonRename_clicked()
     if(ui->lineEditNew->text().isEmpty())
     {
         QMessageBox::information(this, "VfNotes", "Name is empty!");
+        ui->plainTextEditContent->setFocus();
+        return;
+    }
+    QStringList filesList = notes.getFilesList();
+    if(filesList.indexOf(ui->lineEditNew->text()) != -1)
+    {
+        QMessageBox::information(this, "VfNotes", "Note with this name already exists.");
         return;
     }
     notes.renameFile(ui->lineEditNew->text());
-    this->setWindowTitle(ui->lineEditNew->text()+" - VfNotes 1.0");
+    this->setWindowTitle(ui->lineEditNew->text()+" - VfNotes " + versionString);
     ui->lineEditNew->clear();
     ui->listWidgetNotes->clear();
-    ui->listWidgetNotes->addItems(notes.getFilesList());
+    ui->listWidgetNotes->addItems(filesList);
+    ui->plainTextEditContent->setFocus();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    handleSizeChangeInSplitterNotesAndNote();
     if(isModified)
     {
         QMessageBox::StandardButton exitButton = QMessageBox::question(this, "VfNotes", tr("Do you want save changes?"), QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes);
@@ -153,51 +184,58 @@ void MainWindow::showSettingsWindow()
 
 void MainWindow::setNotesFontSize(int fSize)
 {
-    iNotesFontSize = fSize;
-    ui->listWidgetNotes->setFont(QFont("", fSize));
+    jsonSettings["notesFontSize"] = QJsonValue(fSize);
+    notesFont.setPointSize(fSize);
+    ui->listWidgetNotes->setFont(notesFont);
 }
 
 void MainWindow::setNoteFontSize(int fSize)
 {
-    iNoteFontSize = fSize;
-    ui->plainTextEditContent->setFont(QFont("", fSize));
+    jsonSettings["noteFontSize"] = QJsonValue(fSize);
+    noteFont.setPointSize(fSize);
+    ui->plainTextEditContent->setFont(noteFont);
 }
 
 void MainWindow::showAboutWindow()
 {
-    QMessageBox::information(this, "About VfNotes.", "VfNotes release 1.0. Written by Arkadiusz97.");
+    QMessageBox::information(this, "About VfNotes.", "VfNotes " + versionString + ". Written by Arkadiusz97.");
 }
 
-void MainWindow::loadConfig()//temporarily
+void MainWindow::loadConfig()
 {
-    QString matched;
     QFile settingsFile("VfNotes_settings.txt");
     settingsFile.open(QIODevice::ReadOnly|QIODevice::Text);
-    QString settingsFileContent = settingsFile.readAll();
-    QRegularExpression re1("NotesFontSize ([0-9]{1,})"), re2("NoteFontSize ([0-9]{1,})");
-    QRegularExpressionMatch match = re1.match(settingsFileContent);
-    if(match.hasMatch()) matched = match.captured(1);
-    iNotesFontSize = matched.toInt();
-    setNotesFontSize(iNotesFontSize);
-    match = re2.match(settingsFileContent);
-    if(match.hasMatch()) matched = match.captured(1);
-    iNoteFontSize = matched.toInt();
-    setNoteFontSize(iNoteFontSize);
+    QByteArray settingsFileContent = settingsFile.readAll();
+    jsonSettings = QJsonDocument::fromJson(settingsFileContent).object();
+    if(jsonSettings.contains("notesFontSize"))
+        setNotesFontSize(jsonSettings["notesFontSize"].toInt());
+    if(jsonSettings.contains("noteFontSize"))
+        setNoteFontSize(jsonSettings["noteFontSize"].toInt());
+    if(jsonSettings.contains("mainWindowWidth") && jsonSettings.contains("mainWindowHeight"))
+        resize(jsonSettings["mainWindowWidth"].toInt(), jsonSettings["mainWindowHeight"].toInt());
+
+    if(jsonSettings.contains("sizesInSplitterNotesAndNote"))
+    {
+        QList<int>sizesToSet;
+        for(QJsonValueRef i : jsonSettings["sizesInSplitterNotesAndNote"].toArray())
+            sizesToSet.push_back(i.toInt());
+        ui->splitterNotesAndNote->setSizes(sizesToSet);
+    }
     settingsFile.close();
 }
 
 void MainWindow::saveConfig()
 {
     QFile settingsFile("VfNotes_settings.txt");
-    QTextStream stream(&settingsFile);
-    settingsFile.open(QIODevice::WriteOnly|QIODevice::Truncate|QIODevice::Text);
-    stream<<"NotesFontSize "<<QString::number(iNotesFontSize)<<"\n"<<"NoteFontSize "<<QString::number(iNoteFontSize)<<"\n";
+    settingsFile.open(QIODevice::WriteOnly|QIODevice::Truncate);
+    QJsonDocument toSave(jsonSettings);
+    settingsFile.write(toSave.toJson());
     settingsFile.close();
 }
 
 void MainWindow::on_listWidgetNotes_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
-    if(current != NULL && pushButtonRenameEnabledFirstTiem)
+    if(current != NULL && pushButtonRenameEnabledFirstTime)
     {
         ui->plainTextEditContent->setEnabled(true);
         ui->pushButtonRemove->setEnabled(true);
@@ -207,7 +245,7 @@ void MainWindow::on_listWidgetNotes_currentItemChanged(QListWidgetItem *current,
         if(isModified)
         {
             auto reply = QMessageBox::question(this, "VfNotes", "Do you want save changes?", QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
-            if (reply == QMessageBox::Yes) on_pushButtonSave_clicked();
+            if(reply == QMessageBox::Yes) on_pushButtonSave_clicked();
             else if(reply == QMessageBox::No) notes.closeFile();
             else
             {
@@ -221,16 +259,62 @@ void MainWindow::on_listWidgetNotes_currentItemChanged(QListWidgetItem *current,
             }
         }
         isModified = false;
-        this->setWindowTitle(current->text()+" - VfNotes 1.0");
+        this->setWindowTitle(current->text()+" - VfNotes " + versionString);
         ui->plainTextEditContent->setPlainText(notes.openFile(current->text()));
         ui->plainTextEditContent->setFocus();
         QTextCursor cursor(ui->plainTextEditContent->textCursor());
         cursor.movePosition(QTextCursor::End);
         ui->plainTextEditContent->setTextCursor(cursor);
     }
-    if(!pushButtonRenameEnabledFirstTiem)
+    if(!pushButtonRenameEnabledFirstTime)
     {
-        pushButtonRenameEnabledFirstTiem = true;
+        pushButtonRenameEnabledFirstTime = true;
         ui->listWidgetNotes->setCurrentIndex(QModelIndex());
     }
+    ui->pushButtonSave->setEnabled(false);
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+   QMainWindow::resizeEvent(event);
+   jsonSettings["mainWindowWidth"] = QJsonValue(width());
+   jsonSettings["mainWindowHeight"] = QJsonValue(height());
+   saveConfig();
+}
+
+void MainWindow::handleSizeChangeInSplitterNotesAndNote()
+{
+    QList<int>sizesArray = ui->splitterNotesAndNote->sizes();
+    QJsonArray sizesArrayToSave;
+    for(int i : sizesArray)
+        sizesArrayToSave.push_back(i);
+    jsonSettings["sizesInSplitterNotesAndNote"] = QJsonValue(sizesArrayToSave);
+    saveConfig();
+}
+
+void MainWindow::setTheme()
+{
+    QString themeFileName = QFileDialog::getOpenFileName(this, tr("Open theme"), "", tr("Css Files (*.css)"));
+    if(themeFileName.isEmpty())
+        return;
+    QFile themeFile(themeFileName), startThemeFile(startThemeFileName);
+    themeFile.open(QIODevice::ReadOnly);
+    startThemeFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QByteArray themeFileContent = themeFile.readAll();
+    startThemeFile.write(themeFileContent);
+    qApp->setStyleSheet(themeFileContent);
+    themeFile.close();
+    startThemeFile.close();
+}
+
+void MainWindow::setDefaultTheme()
+{
+    int currentNotesFontSize = jsonSettings["notesFontSize"].toInt();
+    int currentNoteFontSize = jsonSettings["noteFontSize"].toInt();
+    qApp->setStyleSheet("");
+    QFile startThemeFile(startThemeFileName);
+    startThemeFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    startThemeFile.close();
+    setNotesFontSize(currentNotesFontSize);
+    setNoteFontSize(currentNoteFontSize);
 }

@@ -12,8 +12,7 @@ QString QFilesContainer::openFile(QString fileName)
     lastFile = patch+"/"+fileName;
     currnetFile.setFileName(lastFile);
     currnetFile.open(QIODevice::ReadOnly | QIODevice::Text);
-    QString content;
-    content = currnetFile.readAll();
+    QString content = currnetFile.readAll();
     currnetFile.close();
     return content.toUtf8();
 }

@@ -6,6 +6,16 @@
 #include <QCloseEvent>
 #include <QShortcut>
 #include <QListWidgetItem>
+#include <QFontDatabase>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QDir>
+#include <QRegularExpression>//To delete
+#include <QFile>
+#include <QTextStream>
+#include <QTimer>
+#include <QFileDialog>
 #include "QFilesContainer.h"
 #include "settingswindow.h"
 
@@ -19,6 +29,7 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+
     ~MainWindow();
 public slots:
     void setNotesFontSize(int fSize);
@@ -48,14 +59,23 @@ private slots:
 
     void on_listWidgetNotes_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
+    void resizeEvent(QResizeEvent* event);
+
+    void handleSizeChangeInSplitterNotesAndNote();
+
+    void setTheme();
+
+    void setDefaultTheme();
 private:
     Ui::MainWindow *ui;
     QFilesContainer notes;
-    bool isModified, change, pushButtonRenameEnabledFirstTiem;
+    bool isModified, change, pushButtonRenameEnabledFirstTime;
     QShortcut *save;
     QShortcut *remove;
     settingsWindow s;
-    int iNotesFontSize, iNoteFontSize;
+    QString versionString, startThemeFileName;
+    QJsonObject jsonSettings;
+    QFont noteFont, notesFont;
 };
 
 #endif // MAINWINDOW_H

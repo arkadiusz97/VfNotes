@@ -1,0 +1,41 @@
+QPushButton
+{
+	color: white;
+	background-color: DimGrey;
+}
+QMainWindow
+{
+	color: white;
+	background-color: #282828;
+	background: #282828;
+}
+QListWidget
+{
+	color: white;
+	background-color: DimGrey;
+}
+QLabel
+{
+	color: white;
+	background-color: #282828;
+}
+QLineEdit
+{
+	color: white;
+	background-color: DimGrey;
+}
+QPlainTextEdit
+{
+	color: white;
+	background-color: DimGrey;
+}
+QMenuBar
+{
+	color: white;
+	background-color: #282828;
+}
+QMessageBox
+{
+	color: white;
+	background-color: #282828;
+}

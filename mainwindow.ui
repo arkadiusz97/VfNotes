@@ -6,95 +6,105 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1210</width>
-    <height>724</height>
+    <width>1027</width>
+    <height>624</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>VfNotes 1.0</string>
+   <string>VfNotes</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="2" column="5">
-     <widget class="QPushButton" name="pushButtonRename">
-      <property name="enabled">
-       <bool>false</bool>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QSplitter" name="splitterNotesAndNote">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
-      <property name="font">
-       <font>
-        <pointsize>16</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Rename</string>
-      </property>
+      <widget class="QListWidget" name="listWidgetNotes"/>
+      <widget class="QPlainTextEdit" name="plainTextEditContent">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+        </font>
+       </property>
+      </widget>
      </widget>
     </item>
-    <item row="0" column="0" rowspan="3">
-     <widget class="QListWidget" name="listWidgetNotes"/>
-    </item>
-    <item row="2" column="3">
-     <widget class="QPushButton" name="pushButtonSave">
-      <property name="enabled">
-       <bool>false</bool>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayoutButtonsAndNameEdit">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
       </property>
-      <property name="font">
-       <font>
-        <pointsize>16</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Save</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="4">
-     <widget class="QPushButton" name="pushButtonRemove">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>16</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Remove</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QPushButton" name="pushButtonNew">
-      <property name="font">
-       <font>
-        <pointsize>16</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>New</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
-     <widget class="QLineEdit" name="lineEditNew">
-      <property name="font">
-       <font>
-        <pointsize>16</pointsize>
-       </font>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1" rowspan="2" colspan="5">
-     <widget class="QPlainTextEdit" name="plainTextEditContent">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>9</pointsize>
-       </font>
-      </property>
-     </widget>
+      <item>
+       <widget class="QPushButton" name="pushButtonNew">
+        <property name="font">
+         <font>
+          <pointsize>16</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>New</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineEditNew">
+        <property name="font">
+         <font>
+          <pointsize>16</pointsize>
+         </font>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButtonSave">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>16</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Save</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButtonRemove">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>16</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Remove</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButtonRename">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>16</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Rename</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -103,7 +113,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1210</width>
+     <width>1027</width>
      <height>21</height>
     </rect>
    </property>
@@ -113,18 +123,31 @@
     </property>
     <addaction name="actionsettings"/>
     <addaction name="separator"/>
+    <addaction name="actionSetTheme"/>
+    <addaction name="actionSetDefaultTheme"/>
+    <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menux"/>
   </widget>
   <action name="actionsettings">
    <property name="text">
-    <string>settings</string>
+    <string>Settings</string>
    </property>
   </action>
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionSetTheme">
+   <property name="text">
+    <string>Set theme</string>
+   </property>
+  </action>
+  <action name="actionSetDefaultTheme">
+   <property name="text">
+    <string>Set default theme</string>
    </property>
   </action>
  </widget>

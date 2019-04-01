@@ -10,3 +10,8 @@ Program was tested under MinGW compiler on Windows and under GCC 64-bit on Linux
 
 # OpenSans
 This program uses OpenSans font. This is Google Inc. product with Apache License 2.0
+
+# Screenshots
+![1](https://github.com/arkadiusz97/VfNotes/blob/master/screenshots/1.png)
+![2](https://github.com/arkadiusz97/VfNotes/blob/master/screenshots/2.png)
+![3](https://github.com/arkadiusz97/VfNotes/blob/master/screenshots/3.png)
